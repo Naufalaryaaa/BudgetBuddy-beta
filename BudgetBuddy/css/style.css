@@ -286,7 +286,8 @@ a:focus {
 
 .slider_section .detail-box p {
   color: #fefefe;
-  font-size: 14px;
+  font-size: 25px;
+  font-weight: 100;
 }
 
 .slider_section .detail-box .btn-box {
