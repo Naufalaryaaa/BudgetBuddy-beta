@@ -7,13 +7,11 @@ import base64
 
 st.set_page_config(page_title="BudgetBuddy", page_icon="💰")
 
-# Fungsi untuk mengambil daftar bulan-tahun unik dari riwayat transaksi
 def get_unique_dates(transactions):
     dates = pd.to_datetime(transactions['date'])
     unique_dates = dates.dt.strftime('%Y-%m').sort_values().unique()
     return unique_dates
 
-# Fungsi untuk membuat tautan unduh
 def get_table_download_link(df, filename, file_format):
     if file_format == 'CSV':
         csv = df.to_csv(index=False)
