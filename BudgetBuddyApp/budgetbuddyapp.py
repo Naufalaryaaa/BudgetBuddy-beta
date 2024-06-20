@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
-import sqlite3
 import matplotlib.pyplot as plt
+import sqlite3
 
 # Fungsi untuk membuat koneksi ke database
 def create_connection():
@@ -37,7 +37,7 @@ def show_register():
             st.info("Silakan login ke akun Anda.")
         except sqlite3.IntegrityError:
             st.error("Username sudah ada. Silakan pilih username lain.")
-
+            
 # Fungsi untuk menampilkan form login
 def show_login():
     st.subheader("Login ke Akun Anda")
@@ -49,21 +49,23 @@ def show_login():
             st.session_state['logged_in'] = True
             st.session_state['username'] = username
             st.success(f"Selamat datang, {username}!")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Username atau Password salah. Silakan coba lagi.")
 
+
+# Fungsi untuk logout pengguna
 def logout_user():
     st.session_state['logged_in'] = False
     st.session_state['username'] = ""
     st.experimental_rerun()
 
-# Fungsi untuk menampilkan halaman utama aplikasi
+# Fungsi untuk menampilkan halaman utama aplikasi setelah login
 def show_main_app():
     st.subheader(f"Selamat datang, {st.session_state['username']}!")
     st.title("BudgetBuddy 💰")
-    
-    # Tombol Logout
+
+# Tombol logout
     col1, col2 = st.columns([75, 10])
     with col2:
         if st.button("Logout"):
@@ -104,6 +106,9 @@ def show_main_app():
         st.pyplot(fig)
     else:
         st.info("Belum ada transaksi yang ditambahkan.")
+
+    st.markdown("---")
+    st.markdown("Developed with ❤️ by nopal")
 
 # Konfigurasi halaman
 st.set_page_config(page_title="BudgetBuddy", page_icon="💰")
