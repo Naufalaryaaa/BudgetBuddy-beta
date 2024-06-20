@@ -1,104 +1,67 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import sqlite3
+from database import create_user, get_user, add_transaction, get_transactions
 
-# Fungsi untuk membuat koneksi ke database
-def create_connection():
-    conn = sqlite3.connect('users.db')
-    return conn
+st.set_page_config(page_title="BudgetBuddy", page_icon="💰")
 
-# Fungsi untuk mendaftarkan pengguna baru
-def register_user(username, password):
-    conn = create_connection()
-    c = conn.cursor()
-    c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, password))
-    conn.commit()
-    conn.close()
+def login():
+    st.subheader("Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type='password')
+    if st.button("Login"):
+        user = get_user(username, password)
+        if user:
+            st.session_state["user_id"] = user[0]
+            st.session_state["username"] = username
+            st.success(f"Selamat datang {username}")
+            st.experimental_rerun()
+        else:
+            st.error("Username atau password salah")
 
-# Fungsi untuk memeriksa kredensial pengguna saat login
-def login_user(username, password):
-    conn = create_connection()
-    c = conn.cursor()
-    c.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password))
-    user = c.fetchone()
-    conn.close()
-    return user
-
-# Fungsi untuk menampilkan form register
-def show_register():
+def register():
     st.subheader("Buat Akun Baru")
     new_user = st.text_input("Username")
     new_password = st.text_input("Password", type='password')
     if st.button("Register"):
-        try:
-            register_user(new_user, new_password)
-            st.success("Akun berhasil dibuat!")
-            st.info("Silakan login ke akun Anda.")
-        except sqlite3.IntegrityError:
-            st.error("Username sudah ada. Silakan pilih username lain.")
-            
-# Fungsi untuk menampilkan form login
-def show_login():
-    st.subheader("Login ke Akun Anda")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type='password')
-    if st.button("Login"):
-        user = login_user(username, password)
-        if user:
-            st.session_state['logged_in'] = True
-            st.session_state['username'] = username
-            st.success(f"Selamat datang, {username}!")
-            st.rerun()
+        if new_user and new_password:
+            try:
+                create_user(new_user, new_password)
+                st.success("Akun berhasil dibuat")
+                st.info("Silakan login dengan akun yang baru dibuat")
+            except Exception as e:
+                st.error(f"Error: {e}")
         else:
-            st.error("Username atau Password salah. Silakan coba lagi.")
+            st.error("Harap isi semua field")
 
-
-# Fungsi untuk logout pengguna
-def logout_user():
-    st.session_state['logged_in'] = False
-    st.session_state['username'] = ""
-    st.experimental_rerun()
-
-# Fungsi untuk menampilkan halaman utama aplikasi setelah login
-def show_main_app():
-    st.subheader(f"Selamat datang, {st.session_state['username']}!")
-    st.title("BudgetBuddy 💰")
-
-# Tombol logout
-    col1, col2 = st.columns([75, 10])
-    with col2:
-        if st.button("Logout"):
-            logout_user()
+def main_page():
 
     st.header("Tambah Transaksi Baru")
     with st.form("transaction_form"):
         date = st.date_input("Tanggal")
         category = st.selectbox("Kategori", ["Pendapatan", "Pengeluaran"])
         description = st.text_input("Deskripsi")
-        amount = st.number_input("Jumlah (Rupiah)", step=1000.0, format="%.2f")
+        amount = st.number_input("Jumlah", step=0.01, format="%.2f")
         submit = st.form_submit_button("Tambahkan Transaksi")
 
         if submit:
-            if amount == 0:
-                st.error("Tolong isi jumlah transaksi!")
-            else:
-                st.session_state['transactions'].append({"Tanggal": date, "Kategori": category, "Deskripsi": description, "Jumlah": amount})
-                st.success("Transaksi berhasil ditambahkan!")
+            add_transaction(st.session_state["user_id"], date, category, description, amount)
+            st.success("Transaksi berhasil ditambahkan!")
 
     st.header("Riwayat Transaksi")
-    if st.session_state['transactions']:
-        df = pd.DataFrame(st.session_state['transactions'])
-        st.dataframe(df)
+    transactions = get_transactions(st.session_state["user_id"])
+    if transactions:
+        df = pd.DataFrame(transactions, columns=["ID", "User ID", "Tanggal", "Kategori", "Deskripsi", "Jumlah"])
+        st.dataframe(df.drop(columns=["ID", "User ID"]))
 
         st.header("Ringkasan Pengeluaran")
         income = df[df['Kategori'] == "Pendapatan"]['Jumlah'].sum()
         expense = df[df['Kategori'] == "Pengeluaran"]['Jumlah'].sum()
         balance = income - expense
 
-        st.metric("Total Pendapatan", f"Rp.{income:,.2f}")
-        st.metric("Total Pengeluaran", f"Rp.{expense:,.2f}")
-        st.metric("Saldo Saat Ini", f"Rp.{balance:,.2f}")
+        st.metric("Total Pendapatan", f"${income:,.2f}")
+        st.metric("Total Pengeluaran", f"${expense:,.2f}")
+        st.metric("Saldo Saat Ini", f"${balance:,.2f}")
 
         st.header("Pendapatan vs Pengeluaran")
         fig, ax = plt.subplots()
@@ -108,24 +71,34 @@ def show_main_app():
         st.info("Belum ada transaksi yang ditambahkan.")
 
     st.markdown("---")
-    st.markdown("Developed with ❤️ by nopal")
+    st.markdown("Developed with ❤️ by Team BudgetBuddy")
 
-# Konfigurasi halaman
-st.set_page_config(page_title="BudgetBuddy", page_icon="💰")
+def main():
+    st.title("BudgetBuddy 💰")
+    if "user_id" not in st.session_state:
+        st.session_state["user_id"] = None
+    if "username" not in st.session_state:
+        st.session_state["username"] = None
 
-# Inisialisasi state
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-if 'transactions' not in st.session_state:
-    st.session_state['transactions'] = []
+    if st.session_state["user_id"] is None:
+        menu = ["Login", "Register"]
+        choice = st.sidebar.selectbox("Menu", menu)
 
-# Menampilkan halaman berdasarkan status login
-if st.session_state['logged_in']:
-    show_main_app()
-else:
-    menu = ["Login", "Register"]
-    choice = st.sidebar.selectbox("Menu", menu)
-    if choice == "Login":
-        show_login()
-    elif choice == "Register":
-        show_register()
+        if choice == "Login":
+            login()
+        elif choice == "Register":
+            register()
+    else:
+        menu = ["Main Page", "Logout"]
+        choice = st.sidebar.selectbox("Menu", menu)
+
+        if choice == "Logout":
+            st.session_state["user_id"] = None
+            st.session_state["username"] = None
+            st.success("Anda berhasil logout")
+            st.experimental_rerun()
+        else:
+            main_page()
+
+if __name__ == '__main__':
+    main()
