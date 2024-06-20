@@ -41,7 +41,7 @@ def main_page():
         date = st.date_input("Tanggal")
         category = st.selectbox("Kategori", ["Pendapatan", "Pengeluaran"])
         description = st.text_input("Deskripsi")
-        amount = st.number_input("Jumlah", step=0.01, format="%.2f")
+        amount = st.number_input("Jumlah", step=1000.0, format="%.2f")
         submit = st.form_submit_button("Tambahkan Transaksi")
 
         if submit:
@@ -59,9 +59,9 @@ def main_page():
         expense = df[df['Kategori'] == "Pengeluaran"]['Jumlah'].sum()
         balance = income - expense
 
-        st.metric("Total Pendapatan", f"${income:,.2f}")
-        st.metric("Total Pengeluaran", f"${expense:,.2f}")
-        st.metric("Saldo Saat Ini", f"${balance:,.2f}")
+        st.metric("Total Pendapatan", f"Rp.{income:,.2f}")
+        st.metric("Total Pengeluaran", f"Rp.{expense:,.2f}")
+        st.metric("Saldo Saat Ini", f"Rp.{balance:,.2f}")
 
         st.header("Pendapatan vs Pengeluaran")
         fig, ax = plt.subplots()
