@@ -35,7 +35,7 @@ def register():
             st.error("Harap isi semua field")
 
 def main_page():
-
+    st.subheader(f"Selamat datang, {st.session_state['username']}!")
     st.header("Tambah Transaksi Baru")
     with st.form("transaction_form"):
         date = st.date_input("Tanggal")
