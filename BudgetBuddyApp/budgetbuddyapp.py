@@ -16,7 +16,7 @@ with st.form("transaction_form"):
     date = st.date_input("Tanggal")
     category = st.selectbox("Kategori", ["Pendapatan", "Pengeluaran"])
     description = st.text_input("Deskripsi")
-    amount = st.number_input("Jumlah", step=0.01, format="%.2f")
+    amount = st.number_input("Jumlah", step=1000.0, format="%.2f")
     submit = st.form_submit_button("Tambahkan Transaksi")
 
     if submit:
