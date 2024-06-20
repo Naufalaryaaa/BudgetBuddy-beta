@@ -24,22 +24,6 @@ def get_table_download_link(df, filename, file_format):
         href = f'<a href="data:application/pdf,{pdf}" download="{filename}">Unduh file PDF</a>'
     return href
 
-# Fungsi untuk menampilkan form unduh transaksi per bulan
-def download_transactions(transactions):
-    st.subheader("Unduh Transaksi per Bulan")
-    unique_dates = get_unique_dates(transactions)
-    selected_date = st.selectbox("Pilih Bulan dan Tahun", unique_dates)
-
-    if st.button("Unduh sebagai CSV"):
-        filtered_transactions = transactions[pd.to_datetime(transactions['date']).dt.strftime('%Y-%m') == selected_date]
-        csv_filename = f"transactions_{selected_date}.csv"
-        st.markdown(get_table_download_link(filtered_transactions, csv_filename, 'CSV'), unsafe_allow_html=True)
-
-    if st.button("Unduh sebagai PDF"):
-        filtered_transactions = transactions[pd.to_datetime(transactions['date']).dt.strftime('%Y-%m') == selected_date]
-        pdf_filename = f"transactions_{selected_date}.pdf"
-        st.markdown(get_table_download_link(filtered_transactions, pdf_filename, 'PDF'), unsafe_allow_html=True)
-
 def login():
     st.subheader("Login")
     username = st.text_input("Username")
@@ -121,7 +105,6 @@ def main_page():
         fig, ax = plt.subplots()
         ax.pie([income, expense], labels=["Pendapatan", "Pengeluaran"], autopct='%1.1f%%', colors=["#76c7c0", "#ff6f69"])
         st.pyplot(fig)
-        download_transactions(df)
     else:
         st.info("Belum ada transaksi yang ditambahkan.")
 
