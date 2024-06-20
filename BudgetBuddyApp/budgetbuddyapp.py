@@ -65,7 +65,7 @@ def main_page():
         df = pd.DataFrame(transactions, columns=["ID", "User ID", "Tanggal", "Kategori", "Deskripsi", "Jumlah"])
         st.dataframe(df.drop(columns=["ID", "User ID"]))
 
-        st.header("Riwayat Tagihan")
+        st.header("Catatan Tagihan")
         bills = get_bills(st.session_state["user_id"])
         if bills:
             df_bills = pd.DataFrame(bills, columns=["ID", "User ID", "Tanggal Jatuh Tempo", "Kategori", "Deskripsi", "Jumlah"])
