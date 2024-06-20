@@ -2,6 +2,14 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
+<<<<<<< Updated upstream
+=======
+# Fungsi untuk membuat koneksi ke database
+db_path = '~\BudgetBuddyApp\users.db'
+def create_connection():
+    conn = sqlite3.connect(db_path)
+    return conn
+>>>>>>> Stashed changes
 
 st.set_page_config(page_title="BudgetBuddy", page_icon="💰")
 
