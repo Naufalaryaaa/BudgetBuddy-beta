@@ -1,4 +1,13 @@
-# Budget Buddy
-Kelompok 12 AOL untuk Software Engineer
+# fitur:
+1. Register dan Login **DONE**
+2. Tambahkan Pendapatan dan Pengeluaran **DONE**
+3. Pantau Pendapatan dan pengeluaran **DONE**
+4. Buat dan Pantau Anggaran
 
-Budget Buddy adalah aplikasi money manager yang memungkinkan anda untuk melacak dan menganalisa pemasukkan dan pengeluaran budget anda.
+# extra:
+1. Pengingat Pembayaran
+2. Analisis Keuangan
+3. Simpan dan Bagikan Laporan
+
+# Link live app
+https://budgetbuddybeta.streamlit.app/

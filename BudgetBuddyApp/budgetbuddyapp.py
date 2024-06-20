@@ -75,18 +75,37 @@ def main_page():
         date = st.date_input("Tanggal")
         category = st.selectbox("Kategori", ["Pendapatan", "Pengeluaran"])
         description = st.text_input("Deskripsi")
-        amount = st.number_input("Jumlah", step=1000.0, format="%.2f")
+        amount = st.number_input("Jumlah", step=0.01, format="%.2f")
         submit = st.form_submit_button("Tambahkan Transaksi")
 
         if submit:
             add_transaction(st.session_state["user_id"], date, category, description, amount)
             st.success("Transaksi berhasil ditambahkan!")
+    st.header("Tambah Tagihan Baru")
+    with st.form("bill_form"):
+        due_date = st.date_input("Tanggal Jatuh Tempo")
+        bill_category = st.selectbox("Kategori", ["Utilities", "Pendidikan", "Hiburan", "Lainnya"])
+        bill_description = st.text_input("Deskripsi")
+        bill_amount = st.number_input("Jumlah", step=0.01, format="%.2f")
+        submit_bill = st.form_submit_button("Tambahkan Tagihan")
 
+        if submit_bill:
+            add_bill(st.session_state["user_id"], due_date, bill_category, bill_description, bill_amount)
+            st.success("Tagihan berhasil ditambahkan!")
+            
     st.header("Riwayat Transaksi")
     transactions = get_transactions(st.session_state["user_id"])
     if transactions:
         df = pd.DataFrame(transactions, columns=["ID", "User ID", "Tanggal", "Kategori", "Deskripsi", "Jumlah"])
         st.dataframe(df.drop(columns=["ID", "User ID"]))
+
+        st.header("Catatan Tagihan")
+        bills = get_bills(st.session_state["user_id"])
+        if bills:
+            df_bills = pd.DataFrame(bills, columns=["ID", "User ID", "Tanggal Jatuh Tempo", "Kategori", "Deskripsi", "Jumlah"])
+            st.dataframe(df_bills.drop(columns=["ID", "User ID"]))
+        else:
+            st.info("Belum ada tagihan yang ditambahkan.")
 
         st.header("Ringkasan Pengeluaran")
         income = df[df['Kategori'] == "Pendapatan"]['Jumlah'].sum()
