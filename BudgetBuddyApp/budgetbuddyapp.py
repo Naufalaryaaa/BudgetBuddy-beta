@@ -1,9 +1,26 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from database import create_user, get_user, add_transaction, get_transactions
+from database import create_user, get_user, add_transaction, get_transactions, add_bill, get_bills
+from datetime import datetime
+import base64
 
 st.set_page_config(page_title="BudgetBuddy", page_icon="💰")
+
+def get_unique_dates(transactions):
+    dates = pd.to_datetime(transactions['date'])
+    unique_dates = dates.dt.strftime('%Y-%m').sort_values().unique()
+    return unique_dates
+
+def get_table_download_link(df, filename, file_format):
+    if file_format == 'CSV':
+        csv = df.to_csv(index=False)
+        b64 = base64.b64encode(csv.encode()).decode()
+        href = f'<a href="data:file/csv;base64,{b64}" download="{filename}">Unduh file CSV</a>'
+    elif file_format == 'PDF':
+        pdf = df.to_html(index=False)
+        href = f'<a href="data:application/pdf,{pdf}" download="{filename}">Unduh file PDF</a>'
+    return href
 
 def login():
     st.subheader("Login")
@@ -15,7 +32,7 @@ def login():
             st.session_state["user_id"] = user[0]
             st.session_state["username"] = username
             st.success(f"Selamat datang {username}")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Username atau password salah")
 
@@ -35,24 +52,43 @@ def register():
             st.error("Harap isi semua field")
 
 def main_page():
-
     st.header("Tambah Transaksi Baru")
     with st.form("transaction_form"):
         date = st.date_input("Tanggal")
         category = st.selectbox("Kategori", ["Pendapatan", "Pengeluaran"])
         description = st.text_input("Deskripsi")
-        amount = st.number_input("Jumlah", step=1000.0, format="%.2f")
+        amount = st.number_input("Jumlah", step=0.01, format="%.2f")
         submit = st.form_submit_button("Tambahkan Transaksi")
 
         if submit:
             add_transaction(st.session_state["user_id"], date, category, description, amount)
             st.success("Transaksi berhasil ditambahkan!")
+            
+    st.header("Tambah Tagihan Baru")
+    with st.form("bill_form"):
+        due_date = st.date_input("Tanggal Jatuh Tempo")
+        bill_category = st.selectbox("Kategori", ["Utilities", "Pendidikan", "Hiburan", "Lainnya"])
+        bill_description = st.text_input("Deskripsi")
+        bill_amount = st.number_input("Jumlah", step=1000.0, format="%.2f")
+        submit_bill = st.form_submit_button("Tambahkan Tagihan")
 
+        if submit_bill:
+            add_bill(st.session_state["user_id"], due_date, bill_category, bill_description, bill_amount)
+            st.success("Tagihan berhasil ditambahkan!")
+            
     st.header("Riwayat Transaksi")
     transactions = get_transactions(st.session_state["user_id"])
     if transactions:
         df = pd.DataFrame(transactions, columns=["ID", "User ID", "Tanggal", "Kategori", "Deskripsi", "Jumlah"])
         st.dataframe(df.drop(columns=["ID", "User ID"]))
+
+        st.header("Catatan Tagihan")
+        bills = get_bills(st.session_state["user_id"])
+        if bills:
+            df_bills = pd.DataFrame(bills, columns=["ID", "User ID", "Tanggal Jatuh Tempo", "Kategori", "Deskripsi", "Jumlah"])
+            st.dataframe(df_bills.drop(columns=["ID", "User ID"]))
+        else:
+            st.info("Belum ada tagihan yang ditambahkan.")
 
         st.header("Ringkasan Pengeluaran")
         income = df[df['Kategori'] == "Pendapatan"]['Jumlah'].sum()
@@ -96,7 +132,7 @@ def main():
             st.session_state["user_id"] = None
             st.session_state["username"] = None
             st.success("Anda berhasil logout")
-            st.experimental_rerun()
+            st.rerun()
         else:
             main_page()
 
