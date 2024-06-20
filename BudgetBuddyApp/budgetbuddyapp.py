@@ -2,8 +2,43 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from database import create_user, get_user, add_transaction, get_transactions
+from datetime import datetime
+import base64
 
 st.set_page_config(page_title="BudgetBuddy", page_icon="💰")
+
+# Fungsi untuk mengambil daftar bulan-tahun unik dari riwayat transaksi
+def get_unique_dates(transactions):
+    dates = pd.to_datetime(transactions['date'])
+    unique_dates = dates.dt.strftime('%Y-%m').sort_values().unique()
+    return unique_dates
+
+# Fungsi untuk membuat tautan unduh
+def get_table_download_link(df, filename, file_format):
+    if file_format == 'CSV':
+        csv = df.to_csv(index=False)
+        b64 = base64.b64encode(csv.encode()).decode()
+        href = f'<a href="data:file/csv;base64,{b64}" download="{filename}">Unduh file CSV</a>'
+    elif file_format == 'PDF':
+        pdf = df.to_html(index=False)
+        href = f'<a href="data:application/pdf,{pdf}" download="{filename}">Unduh file PDF</a>'
+    return href
+
+# Fungsi untuk menampilkan form unduh transaksi per bulan
+def download_transactions(transactions):
+    st.subheader("Unduh Transaksi per Bulan")
+    unique_dates = get_unique_dates(transactions)
+    selected_date = st.selectbox("Pilih Bulan dan Tahun", unique_dates)
+
+    if st.button("Unduh sebagai CSV"):
+        filtered_transactions = transactions[pd.to_datetime(transactions['date']).dt.strftime('%Y-%m') == selected_date]
+        csv_filename = f"transactions_{selected_date}.csv"
+        st.markdown(get_table_download_link(filtered_transactions, csv_filename, 'CSV'), unsafe_allow_html=True)
+
+    if st.button("Unduh sebagai PDF"):
+        filtered_transactions = transactions[pd.to_datetime(transactions['date']).dt.strftime('%Y-%m') == selected_date]
+        pdf_filename = f"transactions_{selected_date}.pdf"
+        st.markdown(get_table_download_link(filtered_transactions, pdf_filename, 'PDF'), unsafe_allow_html=True)
 
 def login():
     st.subheader("Login")
@@ -15,7 +50,7 @@ def login():
             st.session_state["user_id"] = user[0]
             st.session_state["username"] = username
             st.success(f"Selamat datang {username}")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Username atau password salah")
 
@@ -35,7 +70,6 @@ def register():
             st.error("Harap isi semua field")
 
 def main_page():
-
     st.header("Tambah Transaksi Baru")
     with st.form("transaction_form"):
         date = st.date_input("Tanggal")
@@ -67,6 +101,7 @@ def main_page():
         fig, ax = plt.subplots()
         ax.pie([income, expense], labels=["Pendapatan", "Pengeluaran"], autopct='%1.1f%%', colors=["#76c7c0", "#ff6f69"])
         st.pyplot(fig)
+        download_transactions(df)
     else:
         st.info("Belum ada transaksi yang ditambahkan.")
 
@@ -96,7 +131,7 @@ def main():
             st.session_state["user_id"] = None
             st.session_state["username"] = None
             st.success("Anda berhasil logout")
-            st.experimental_rerun()
+            st.rerun()
         else:
             main_page()
 
