@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from database import create_user, get_user, add_transaction, get_transactions
+from database import create_user, get_user, add_transaction, get_transactions, add_bill, get_bills
 from datetime import datetime
 import base64
 
@@ -81,12 +81,13 @@ def main_page():
         if submit:
             add_transaction(st.session_state["user_id"], date, category, description, amount)
             st.success("Transaksi berhasil ditambahkan!")
+            
     st.header("Tambah Tagihan Baru")
     with st.form("bill_form"):
         due_date = st.date_input("Tanggal Jatuh Tempo")
         bill_category = st.selectbox("Kategori", ["Utilities", "Pendidikan", "Hiburan", "Lainnya"])
         bill_description = st.text_input("Deskripsi")
-        bill_amount = st.number_input("Jumlah", step=0.01, format="%.2f")
+        bill_amount = st.number_input("Jumlah", step=1000.0, format="%.2f")
         submit_bill = st.form_submit_button("Tambahkan Tagihan")
 
         if submit_bill:
