@@ -28,6 +28,17 @@ def create_tables():
         FOREIGN KEY (user_id) REFERENCES users (id)
     )
     ''')
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS bills (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        due_date TEXT,
+        category TEXT,
+        description TEXT,
+        amount REAL,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
     conn.commit()
     conn.close()
 
@@ -61,6 +72,22 @@ def get_transactions(user_id):
     transactions = c.fetchall()
     conn.close()
     return transactions
+
+def add_bill(user_id, due_date, category, description, amount):
+    conn = create_connection()
+    c = conn.cursor()
+    c.execute('INSERT INTO bills (user_id, due_date, category, description, amount) VALUES (?, ?, ?, ?, ?)',
+              (user_id, due_date, category, description, amount))
+    conn.commit()
+    conn.close()
+
+def get_bills(user_id):
+    conn = create_connection()
+    c = conn.cursor()
+    c.execute('SELECT * FROM bills WHERE user_id = ?', (user_id,))
+    bills = c.fetchall()
+    conn.close()
+    return bills
 
 # Panggil fungsi create_tables untuk membuat tabel saat awal
 create_tables()
